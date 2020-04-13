@@ -1,6 +1,6 @@
 import numpy as np
 
-root_dir = '/home/stepeter/AJILE/stepeter_sandbox/ECoG_mvmt_init/data_release_scripts/'
+root_dir = '.../naturalistic_arm_movements_ecog/'
 
 constants_compute_tfr = {'pad_val' : 0.5,
                          'alpha' : 0.05,

@@ -1,7 +1,5 @@
 import numpy as np
 
-root_dir = '.../naturalistic_arm_movements_ecog/'
-
 constants_compute_tfr = {'pad_val' : 0.5,
                          'alpha' : 0.05,
                          'n_perms' : 2000,

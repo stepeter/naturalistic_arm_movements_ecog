@@ -22,10 +22,9 @@ This script will compute spectral power via Morlet wavelet transform for ECoG se
 python compute_spectral_power.py -eclp <load_path> -sp <save_path>
 ```
 
-### Step 2: Plot behavioral variability (*Plot_movement_variability_Fig2.ipynb*)
+### Step 2: Visualize behavioral and environmental features used for regression analysis (*Behavioral_features_Fig2.ipynb*)
 
-The ECoG data files also contain metadata extracted from video recordings. This includes positions of the left and right wrist during each movement. This notebook will use these wrist positions, showing how variable the identified movements are. Be sure to specify the directory where the spectral power results (TFR files) are saved using tfr_lp.
-
+Here, we extract behavioral and environmental metadata based on the time when each reach began (day of recording, time of day), how the contralateral wrist moved during the reach (reach duration, magnitude, angle, and onset speed), whether people were speaking during movement initiation (speech ratio), and how much both wrists moved during each movement (bimanual ratio, overlap, and class). These 10 features are later used to model changes in neural spectral power via multiple linear regression. This notebook, however, plots the normalized distributions of these 10 features for each subject. Be sure to set *tfr_lp* to be the directory with the spectral power data (TFR files). These files include the behavioral feature data in their metadata attribute.
 
 ### (Optional) Step 3: Create projection matrices (*project_ecog_to_rois.m*)
 
@@ -38,19 +37,12 @@ Next, run *project_ecog_to_rois.m*, setting *save_proj_matrix* and *save_plots* 
 This notebook will plot projected power averaged across subjects for all 8 regions, along with projected power at 1 region showing each individual subject. Be sure to specify the directories where the spectral power results (TFR files) are saved using *tfr_lp* and where the projection matrices (CSV files) are saved using *roi_proj_loadpath*.
 
 
-### Step 5: Comparison between naturalistic reaches and cued hand clenches (*Comparison_reaches_handclench_Fig5.ipynb*)
+### Step 5: Plot inter-event variability in low/high-frequency band spectral power (*Plot_banded_power_Fig5.ipynb*)
 
-In addition to the naturalistic reach data for 12 subjects, we were able to analyze behavior and neural data from visually cued hand clench data recorded for 3 of the 12 subjects. This notebook plots comparisons between the 2 conditions for behavior, neural spectral power, and neural spectral power variability. Be sure to set the location of the computed spectral power files with *tfr_lp_reaches*.
-
-The hand clench data is much smaller, so it is computed in this notebook. Specify the directory of the hand clench data with *epochs_lp_clenches*.
+This notebook generates Fig. 5 from the paper, which shows the event-by-event variability in spectral power for each subject, separated across recording days. Be sure to set the pathnames for *tfr_lp* and *roi_proj_loadpath*.
 
 
-### Step 6: Visualize behavioral and environmental features used for regression analysis (*Behavioral_features_Fig6.ipynb*)
-
-In addition to the wrist positions, we have also extracted other behavioral and environmental metadata based on the time when each reach began (day of recording, time of day), how the contralateral wrist moved during the reach (reach duration, magnitude, angle, and onset speed), whether people were speaking during movement initiation (speech ratio), and how much both wrists moved during each movement (bimanual ratio, overlap, and class). These 10 features are later used to model changes in neural spectral power via multiple linear regression. This notebook, however, plots the normalized distributions of these 10 features for each subject. Be sure to set *tfr_lp* to be the directory with the spectral power data (TFR files). These files include the behavioral feature data in their metadata attribute.
-
-
-### Step 7: Fit regression models (*fit_regression_models.py*)
+### Step 6: Fit regression models (*fit_regression_models.py*)
 
 We now want to see how well the behavioral metadata from the previous step explains changes in the neural activity during movement initiation. This script performs separate multiple regression models for each ECoG recording electrode, performing several random train/test splits to minimize bias. For each fit model, the R2 score is computed on the withheld test data to measure how well the model generalizes to new data.
 
@@ -62,6 +54,6 @@ To run this script, just specify the load path (with TFR files) and save path fo
 python fit_regression_models.py -tflp <TFR_load_path> -sp <save_path>
 ```
 
-### Step 8: Visualize regression results (*Regression_results_Figs7_8.ipynb*)
+### Step 7: Visualize regression results (*Regression_results_Fig6.ipynb*)
 
 This notebook visualizes the R2 scores and coefficients obtained from the previous step. Specify the directories of the regression output (*reg_lp*) and spectral power files (*tfr_lp*). In addition, *plot_sd_coef* allows for plotting the standard deviation (True) or average (False) coefficient value across permutations.

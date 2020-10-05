@@ -159,6 +159,9 @@ def load_project_spectral_power(tfr_lp,roi_proj_loadpath,good_rois,n_subjs,atlas
             for i,bad_ch in enumerate(bad_chans):
                 inds2drop.append(np.nonzero(ch_list==bad_ch)[0])
             inds2drop = np.asarray(inds2drop)
+            if len(inds2drop)==1:
+                inds2drop = inds2drop[0]
+            
             df.iloc[inds2drop] = 0
             sum_vals = df.sum(axis=0).values
             for s in range(len(sum_vals)):

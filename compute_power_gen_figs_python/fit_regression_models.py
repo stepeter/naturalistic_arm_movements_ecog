@@ -9,9 +9,10 @@ from functools import partial
 #Custom packages
 import config
 from regression_utils import single_subj_regression
+from tfr_utils import str2bool
 
 
-def main(tfr_lp,save_folder,feats2use,n_perms,n_subjs,n_proc,model_type):
+def main(tfr_lp,save_folder,feats2use,n_perms,n_subjs,n_proc,model_type,add_interactions=False):
     '''
     Perform robust linear regression between behavioral features and spectral power.
     Allows for running subjects in parallel to speed up computation time (see n_proc variable).
@@ -37,13 +38,13 @@ def main(tfr_lp,save_folder,feats2use,n_perms,n_subjs,n_proc,model_type):
         #Run parallel processes
         pool = Pool(n_proc)
         for s, res in enumerate(pool.imap(partial(single_subj_regression,tfr_lp,max_chan_num,feats2use,
-                                                  n_perms,model_type),range(n_subjs), chunksize)):
+                                                  n_perms,model_type,add_interactions),range(n_subjs), chunksize)):
             #Store function output
             coefs_pats_out[s,...],r2_test_full_pats_out[s,...],r2_train_full_pats_out[s,...],\
             del_r2_test_reduced_pats_out[s,...],del_r2_train_reduced_pats_out[s,...],feat_select_prob[s,...] = res
     else:
         for s in range(n_subjs):
-            res = single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s)
+            res = single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,add_interactions,s)
             #Store function output
             coefs_pats_out[s,...],r2_test_full_pats_out[s,...],r2_train_full_pats_out[s,...],\
             del_r2_test_reduced_pats_out[s,...],del_r2_train_reduced_pats_out[s,...],feat_select_prob[s,...] = res
@@ -72,6 +73,8 @@ if __name__ == "__main__":
                         help='Number of processes to run at once (how many CPU cores to use)')
     parser.add_argument('-mod','--model_type', required=False, default='linear', type=str,
                         help='Type of model to fit (linear or rf [random forest])')
+    parser.add_argument('-ait','--add_interactions', type=str2bool, nargs='?', required=False, default='False',
+                        help='Whether or not to add day, interaction effects (True/False)')
     args = parser.parse_args()
             
-    main(args.tfr_lp,args.save_folder,args.feats2use,args.n_perms,args.n_subjs,args.n_proc,args.model_type)
+    main(args.tfr_lp,args.save_folder,args.feats2use,args.n_perms,args.n_subjs,args.n_proc,args.model_type,args.add_interactions)

@@ -20,30 +20,31 @@ def user_def_f_aves(sbj_id):
     '''
     Define subject-specific frequency bands for power features used in regression
     '''
-    if sbj_id==0:
-        f_lo,f_hi = [5,32],[96,120]
-    elif sbj_id==1:
-        f_lo,f_hi = [5,21],[70,90]
-    elif sbj_id==2:
-        f_lo,f_hi = [5,21],[80,120]
-    elif sbj_id==3:
-        f_lo,f_hi = [5,11],[80,120]
-    elif sbj_id==4:
-        f_lo,f_hi = [5,21],[70,90]
-    elif sbj_id==5:
-        f_lo,f_hi = [11,26],[80,120]
-    elif sbj_id==6:
-        f_lo,f_hi = [5,21],[80,120]
-    elif sbj_id==7:
-        f_lo,f_hi = [26,31],[80,120]
-    elif sbj_id==8:
-        f_lo,f_hi = [5,21],[60,80]
-    elif sbj_id==9:
-        f_lo,f_hi = [5,21],[70,90]
-    elif sbj_id==10:
-        f_lo,f_hi = [5,21],[80,120]
-    elif sbj_id==11:
-        f_lo,f_hi = [5,21],[60,80]
+    f_lo,f_hi = [8,32],[76,100]
+#     if sbj_id==0:
+#         f_lo,f_hi = [5,32],[96,120]
+#     elif sbj_id==1:
+#         f_lo,f_hi = [5,21],[70,90]
+#     elif sbj_id==2:
+#         f_lo,f_hi = [5,21],[80,120]
+#     elif sbj_id==3:
+#         f_lo,f_hi = [5,11],[80,120]
+#     elif sbj_id==4:
+#         f_lo,f_hi = [5,21],[70,90]
+#     elif sbj_id==5:
+#         f_lo,f_hi = [11,26],[80,120]
+#     elif sbj_id==6:
+#         f_lo,f_hi = [5,21],[80,120]
+#     elif sbj_id==7:
+#         f_lo,f_hi = [26,31],[80,120]
+#     elif sbj_id==8:
+#         f_lo,f_hi = [5,21],[60,80]
+#     elif sbj_id==9:
+#         f_lo,f_hi = [5,21],[70,90]
+#     elif sbj_id==10:
+#         f_lo,f_hi = [5,21],[80,120]
+#     elif sbj_id==11:
+#         f_lo,f_hi = [5,21],[60,80]
     return f_lo,f_hi
 
 
@@ -139,6 +140,23 @@ def train_test_split_power_inds(n_evs,per_train):
     test_inds = len_arr[train_per:]
     return train_inds,test_inds
 
+def train_test_split_day_balance(day_lst, per_train):
+    '''
+    Computes random train/test split across events,
+    taking equal amounts from each day for test data.
+    '''
+    day_np = np.asarray(day_lst)
+    day_uni = np.unique(day_np)
+    n_test_day = int(((1-per_train)*len(day_lst))//len(day_uni))
+    train_inds, test_inds = [], []
+    for day in day_uni:
+        day_inds = np.nonzero(day_np==day)[0]
+        len_arr = np.arange(len(day_inds))
+        np.random.shuffle(len_arr)
+        train_inds.extend(day_inds[len_arr[:-n_test_day]])
+        test_inds.extend(day_inds[len_arr[-n_test_day:]])
+    return np.asarray(train_inds),np.asarray(test_inds)
+
 
 def _forward_selected_new(data, response,d_val=False):
     """Linear model designed by forward selection. 
@@ -215,11 +233,13 @@ def written2num(num_in):
         return num_in
 
 
-def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s):
+def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,add_interactions=False,s=0):
     '''
     Runs single subject regression models, using n_perms random train/test splits.
     Also computes R2 and delta R2 values and outputs these values across permutations, along with coefficients.
     '''
+    add_prev_pow = False
+    
     #Other params: 
     n_freqs = config.constants_regress['n_freqs'] #number of spectral feature frequency bands
     t_ave = config.constants_regress['t_ave'] #time bins to average over (in sec)
@@ -259,6 +279,11 @@ def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s):
                                                   log_cols1=['reach_r','onset_velocity'])
 
         #Crop power data and average across time bins
+        if add_prev_pow:
+            power_prev = power_subj.copy()
+            power_prev = power_prev.crop(tmin=-0.5,tmax=0)
+            power_prev_t_ave = np.median(power_prev.data,axis=-1) #average across time bins
+            
         power_subj = power_subj.crop(tmin=t_ave[0],tmax=t_ave[1])
         power_subj_t_ave = np.median(power_subj.data,axis=-1) #average across time bins
         
@@ -285,17 +310,36 @@ def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s):
         tod[1] = [1 if ((val>=8) & (val<=16)) else 0 for val in df_metadata_all['tod']]
         tod[2] = [1 if ((val>=16) & (val<=24)) else 0 for val in df_metadata_all['tod']]
         tod_one_hot = pd.DataFrame(np.asarray(tod).T,columns=['morning','afternoon','evening'])
-
+        
         #Standardize the features and add one-hot encodings
         df_metadata_std = standardize_feats(df_metadata_all.loc[:,feats2use])
+        
+        #Add interaction terms
+        if add_interactions:
+            feat_cols = df_metadata_std.columns[:-1]
+            for day_col in one_hot.columns:
+                for feat in feat_cols:
+                    df_metadata_std[feat+'_'+str(day_col)] = df_metadata_std[feat]*one_hot[day_col]
+                
+        #Standardize the features and add one-hot encodings
         df_metadata_std = df_metadata_std.join(one_hot)
         df_metadata_std = df_metadata_std.join(tod_one_hot)
         df_metadata_std = df_metadata_std.drop('tod',axis=1)
+        day_lst = df_metadata_all['day']
         df_metadata_std = df_metadata_std.drop('day',axis=1)
         
+        if add_prev_pow:
+            power_prev_t_ave_cp = power_prev_t_ave.copy()
+            power_prev_t_ave = power_prev_t_ave[...,:n_freqs] #only need n_freqs frequencies
+            f_inds_lo_prev = np.nonzero(np.logical_and(power_prev.freqs>=f_ave_lo[0],power_prev.freqs<=f_ave_lo[1]))[0]
+            f_inds_hi_prev = np.nonzero(np.logical_and(power_prev.freqs>=f_ave_hi[0],power_prev.freqs<=f_ave_hi[1]))[0]
+            power_prev_t_ave[...,0] = np.median(power_prev_t_ave_cp[...,f_inds_lo_prev],axis=-1)
+            power_prev_t_ave[...,1] = np.median(power_prev_t_ave_cp[...,f_inds_hi_prev],axis=-1)
+        
         #Find train and validation (last day) indices
-        train_inds,val_inds = train_test_split_power_inds(df_metadata_std.shape[0],per_train=.9)
-
+#         train_inds,val_inds = train_test_split_power_inds(df_metadata_std.shape[0],per_train=.9)
+        train_inds,val_inds = train_test_split_day_balance(day_lst,per_train=.8)
+        
         #Perform regressions
         coef_inds_keep = len(set(df_metadata_std.columns.tolist()).intersection(feats2use))-1
         for elec_ind in tqdm(range(power_subj_t_ave.shape[1])):
@@ -322,17 +366,23 @@ def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s):
                     if col_ind<coef_inds_keep:
                         feat_ind = col_ind
                         feat_select_prob[elec_ind,feat_ind,freq_i,perm] += 1
-                    elif col_ind<(len(df_forward.columns)-4):
+                    elif col_ind < (coef_inds_keep+one_hot.shape[1]):
+                        #(len(df_forward.columns)-4):
                         feat_ind = coef_inds_keep
                         N_days = len(df_forward.columns)-4-coef_inds_keep
                         feat_select_prob[elec_ind,feat_ind,freq_i,perm] += (1/N_days)
-                    else:
+                    elif col_ind < (coef_inds_keep+one_hot.shape[1]+tod_one_hot.shape[1]):
                         feat_ind = coef_inds_keep+1
                         feat_select_prob[elec_ind,feat_ind,freq_i,perm] += (1/3)
                   
                 bad_feats = np.setdiff1d(np.asarray(df_copy.columns),np.asarray(new_selected_feats))
                 for bad_feat in bad_feats:
                     df_copy[bad_feat].values[:] = 0
+                
+                if add_prev_pow:
+                    pow_prev = power_prev_t_ave[:,elec_ind,freq_i]
+                    df_copy['prev_pow'] = (pow_prev-np.mean(pow_prev))/np.std(pow_prev)
+#                     df_copy['prev_pow'] = power_prev_t_ave[:,elec_ind,freq_i]
                 
                 X = df_copy.to_numpy()
                 y = power_subj_t_ave[:,elec_ind,freq_i]
@@ -411,7 +461,7 @@ def single_subj_regression(tfr_lp,max_chan_num,feats2use,n_perms,model_type,s):
 
 
 def compute_r2_score_colors(r2_dat_plot,del_r2_dat_plot,n_subjs,n_freqs,n_coefs,
-                            reg_r2_test_ave,r2_thresh):
+                            reg_r2_test_ave,r2_thresh,vmax=None):
     '''
     Takes in R2 scores and delta R2 scores for each input feature and converts them to RGB colors
     based on color map defined in config file.
@@ -423,7 +473,10 @@ def compute_r2_score_colors(r2_dat_plot,del_r2_dat_plot,n_subjs,n_freqs,n_coefs,
              }
     cdict = {**red_cm,"alpha": ((0.0, 0.0, 0.0),(1.0, 1.0, 1.0))}
     cmap_w = LinearSegmentedColormap("curr_cmap",cdict)
-    norm = Normalize(vmin=config.constants_regress['vscale_r2'][0], vmax=config.constants_regress['vscale_r2'][1])
+    if vmax==None:
+        norm = Normalize(vmin=config.constants_regress['vscale_r2'][0], vmax=config.constants_regress['vscale_r2'][1])
+    else:
+        norm = Normalize(vmin=config.constants_regress['vscale_r2'][0], vmax=vmax)
 
     colors_all = np.empty([n_subjs,n_freqs,n_coefs],dtype=object)
     colors_all_r2 = np.empty([n_subjs,n_freqs],dtype=object)

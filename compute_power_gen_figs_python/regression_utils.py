@@ -503,10 +503,10 @@ def compute_r2_score_colors(r2_dat_plot,del_r2_dat_plot,n_subjs,n_freqs,n_coefs,
 
                 tmp_val_lo_r2 = reg_r2_test_ave[i,:,0].tolist() #test_full_all[i][::2]
                 tmp_val_lo_r2 = [val for val in tmp_val_lo_r2 if str(val) != 'nan']
-                tmp_val_lo_r2 = [val if val>r2_thresh else r2_thresh for val in tmp_val_lo_r2 ]
+                tmp_val_lo_r2 = [val if val>r2_thresh else -.1 for val in tmp_val_lo_r2 ]
                 tmp_val_hi_r2 = reg_r2_test_ave[i,:,1].tolist() #test_full_all[i][1::2]
                 tmp_val_hi_r2 = [val for val in tmp_val_hi_r2 if str(val) != 'nan']
-                tmp_val_hi_r2 = [val if val>r2_thresh else r2_thresh for val in tmp_val_hi_r2 ]
+                tmp_val_hi_r2 = [val if val>r2_thresh else -.1 for val in tmp_val_hi_r2 ]
                 colors_lo_w,colors_hi_w = [],[]
                 for j in range(len(tmp_val_lo_r2)):
                     colors_lo_w.append(cmap_w(norm(tmp_val_lo_r2[j]))[0:3])

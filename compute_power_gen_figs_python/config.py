@@ -1,7 +1,5 @@
 import numpy as np
 
-root_dir = '.../data_release_scripts/'
-
 constants_compute_tfr = {'pad_val' : 0.5,
                          'alpha' : 0.05,
                          'n_perms' : 2000,
@@ -18,6 +16,7 @@ constants_plot_tfr = {'epoch_times' : [-1.5,1.51],
                       'stat_method' : 'fdr_bh',
                       'baseline_vals' : [-1.5,-1],
                       'epoch_times_plot' : [-1.5,1.51],
+                      'vscale_val' : 1,
                       'roi_title_cols' : [[1,0,0],[0,0,1],[0,1,0],[1,0,1],[0,1,1],[.8,.8,0],[1,.5,0],[.5,0,1],[0,.5,1],[0,1,.5],[1,0,.5],[.6,.3,.2]],
                       'roi_label_dict' : {'Frontal_Mid_L' : 'Middle Frontal','Precentral_L' : 'Precentral',
                                           'Postcentral_L' : 'Postcentral','Temporal_Sup_L' : 'Superior Temporal',
@@ -51,8 +50,8 @@ constants_regress = {'chunksize' : 1,
                      'atlas' : 'aal',
                      'dipole_dens_thresh' : 3,
                      'n_estimators' : 150,
-                     'max_depth' : 5,
-                     'vscale_r2' : [0,0.2],
+                     'max_depth' : 8,
+                     'vscale_r2' : [0,0.1],
                      'cmap_r2' : 'YlGn',
                      'vscale_coef' : [-1,1],
                      'vscale_coef_sd' : [-1,1],

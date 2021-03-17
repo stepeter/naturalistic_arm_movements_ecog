@@ -1,10 +1,10 @@
 # Behavioral and neural variability of naturalistic arm movements
 
-This repository contains scripts used to analyze the behavioral and neural variability of 12 human subjects as they performed spontaneous arm movements across multiple days. Neural data was monitored intracranially using electrocorticography (ECoG); wrist trajectories extracted from simultaneously recorded video was used to generate behavioral data. This repository is meant to be used with our published dataset (https://figshare.com/projects/Behavioral_and_neural_variability_of_naturalistic_arm_movements/78666) to replicate our analysis and generate most of the figures from our manuscript (https://doi.org/10.1101/2020.04.17.047357). Such analyses include ECoG spectral power computation and projection to pre-defined regions of interest, comparison of naturalistic reach data to cued hand clench data, and regression of spectral power on behavioral and environmental features.
+This repository contains scripts used to analyze the behavioral and neural variability of 12 human subjects as they performed spontaneous arm movements across multiple days. Neural data was monitored intracranially using electrocorticography (ECoG); wrist trajectories extracted from simultaneously recorded video was used to generate behavioral data. This repository is meant to be used with our [published dataset](https://figshare.com/projects/Behavioral_and_neural_variability_of_naturalistic_arm_movements/78666) to replicate our analysis and generate most of the figures from our [preprint](https://doi.org/10.1101/2020.04.17.047357). Such analyses include ECoG spectral power computation and projection to pre-defined regions of interest, comparison of naturalistic reach data to cued hand clench data, and regression of spectral power on behavioral and environmental features.
 
 ## Getting started
 
-This code was primarily run using Python 3.6.8, with one optional part requiring Matlab 2018b. Note that Matlab and Python code are separated into separate folders. Analysis is heavily reliant on MNE (https://mne.tools/stable/index.html) for data analysis and saving. Some specific package versions used:
+This code was primarily run using Python 3.6.8, with one optional part requiring Matlab 2018b. Note that Matlab and Python code are separated into separate folders. Analysis is heavily reliant on [MNE](https://mne.tools/stable/index.html) for data analysis and saving. Some specific package versions used:
 
 -  Python: Matplotlib 3.0.2, MNE 0.19.0, Nilearn 0.5.0, Numpy 1.15.4, Pandas 0.25.3
 
@@ -28,7 +28,7 @@ Here, we extract behavioral and environmental metadata based on the time when ea
 
 ### (Optional) Step 3: Create projection matrices (*project_ecog_to_rois.m*)
 
-To visualize the spectral power of multiple subjects, we project the power across electrodes into pre-defined regions of interest using the Measure Projection Toolbox (https://sccn.ucsd.edu/wiki/MPT). The projection matrices are included with the dataset, but can be generated using the Matlab code in *project_data_rois_matlab*. First, open *set_environment_paths.m* and update the path names. **Note that other versions of EEGLAB may cause errors.**
+To visualize the spectral power of multiple subjects, we project the power across electrodes into pre-defined regions of interest using the [Measure Projection Toolbox](https://sccn.ucsd.edu/wiki/MPT). The projection matrices are included with the dataset, but can be generated using the Matlab code in *project_data_rois_matlab*. First, open *set_environment_paths.m* and update the path names. **Note that other versions of EEGLAB may cause errors.**
 
 Next, run *project_ecog_to_rois.m*, setting *save_proj_matrix* and *save_plots* to 1 to save the results. The plot will show all regions of interest on the left hemisphere, with the 8 regions of interests we used shown in color.
 
